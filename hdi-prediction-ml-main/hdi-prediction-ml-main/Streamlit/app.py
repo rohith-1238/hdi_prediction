@@ -1,31 +1,32 @@
 import streamlit as st
-import numpy as np
 import pandas as pd
 import pickle
-import os
 
 # Page configuration
 st.set_page_config(
     page_title="HDI Prediction System",
-    page_icon="📊",
+    page_icon="🌍",
     layout="centered"
 )
 
-# Load model
-model_path = os.path.join(
-    os.path.dirname(__file__),
-    "..",
-    "Flask",
-    "HDI.pkl"
-)
+# Load trained model
+model_path = "Flask/HDI.pkl"
 
-model = pickle.load(open(model_path, "rb"))
+try:
+    with open(model_path, "rb") as file:
+        model = pickle.load(file)
+
+except FileNotFoundError:
+    st.error("HDI.pkl file not found. Please check the Flask/HDI.pkl path.")
+    st.stop()
+
 
 # Title
 st.title("🌍 Human Development Index Prediction")
 st.write(
-    "Enter socioeconomic indicators to predict the Human Development Index."
+    "Enter the socioeconomic indicators to predict the Human Development Index."
 )
+
 
 # Input fields
 life_expectancy = st.number_input(
@@ -55,10 +56,10 @@ internet = st.number_input(
     value=65.4
 )
 
-# Prediction button
-if st.button("Predict HDI", type="primary"):
 
-    # Create input DataFrame
+# Prediction
+if st.button("Predict HDI"):
+
     data = pd.DataFrame(
         [[
             life_expectancy,
@@ -74,9 +75,9 @@ if st.button("Predict HDI", type="primary"):
         ]
     )
 
-    # Prediction
     prediction = model.predict(data)[0]
     prediction = round(float(prediction), 2)
+
 
     # HDI classification
     if 0.3 <= prediction < 0.4:
@@ -94,10 +95,10 @@ if st.button("Predict HDI", type="primary"):
     else:
         level = "Outside HDI range"
 
+
     # Display result
     st.success(f"{level}: {prediction}")
 
-    # Display inputs
     st.subheader("Input Values")
 
     result_df = pd.DataFrame({
