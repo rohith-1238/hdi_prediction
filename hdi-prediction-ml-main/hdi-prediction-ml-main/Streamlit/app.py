@@ -31,7 +31,10 @@ MODEL_PATH = (
 try:
     with open(MODEL_PATH, "rb") as file:
         model = pickle.load(file)
-
+except Exception as e:
+    st.error("Error loading HDI.pkl")
+    st.code(str(e))
+    st.stop()
 except FileNotFoundError:
     st.error(f"HDI.pkl not found at: {MODEL_PATH}")
     st.stop()
