@@ -4,9 +4,9 @@ import pickle
 from pathlib import Path
 
 
-# ============================================================
-# PAGE CONFIGURATION
-# ============================================================
+# ---------------------------------------------------------
+# Page configuration
+# ---------------------------------------------------------
 
 st.set_page_config(
     page_title="HDI Prediction System",
@@ -15,18 +15,24 @@ st.set_page_config(
 )
 
 
-# ============================================================
-# MODEL
-# ============================================================
+# ---------------------------------------------------------
+# Model path
+# ---------------------------------------------------------
 
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / "HDI.pkl"
 
 
+# ---------------------------------------------------------
+# Load model
+# ---------------------------------------------------------
+
 if not MODEL_PATH.exists():
-    st.error("HDI.pkl not found.")
-    st.write("Expected location:")
+    st.error("HDI.pkl was not found.")
+
+    st.write("Expected model location:")
     st.code(str(MODEL_PATH))
+
     st.stop()
 
 
@@ -35,31 +41,31 @@ try:
         model = pickle.load(file)
 
 except ModuleNotFoundError as e:
-    st.error("Required ML dependency is missing.")
+    st.error("A required Python package is missing.")
     st.code(str(e))
     st.stop()
 
 except Exception as e:
-    st.error("HDI model could not be loaded.")
+    st.error("Error loading HDI.pkl")
     st.code(str(e))
     st.stop()
 
 
-# ============================================================
-# TITLE
-# ============================================================
+# ---------------------------------------------------------
+# Title
+# ---------------------------------------------------------
 
 st.title("🌍 Human Development Index Prediction")
 
 st.write(
-    "Enter the socioeconomic indicators to predict "
-    "the Human Development Index."
+    "Enter the socioeconomic indicators below "
+    "to predict the Human Development Index."
 )
 
 
-# ============================================================
-# INPUTS
-# ============================================================
+# ---------------------------------------------------------
+# Input fields
+# ---------------------------------------------------------
 
 life_expectancy = st.number_input(
     "Life Expectancy",
@@ -93,9 +99,9 @@ internet = st.number_input(
 )
 
 
-# ============================================================
-# PREDICTION
-# ============================================================
+# ---------------------------------------------------------
+# Prediction
+# ---------------------------------------------------------
 
 if st.button("Predict HDI", type="primary"):
 
@@ -117,6 +123,7 @@ if st.button("Predict HDI", type="primary"):
     try:
 
         prediction = model.predict(input_data)[0]
+
         prediction = round(float(prediction), 2)
 
     except Exception as e:
@@ -126,9 +133,9 @@ if st.button("Predict HDI", type="primary"):
         st.stop()
 
 
-    # ========================================================
-    # HDI LEVEL
-    # ========================================================
+    # -----------------------------------------------------
+    # HDI classification
+    # -----------------------------------------------------
 
     if prediction < 0.4:
         hdi_level = "Low HDI"
@@ -146,18 +153,18 @@ if st.button("Predict HDI", type="primary"):
         hdi_level = "Outside HDI Range"
 
 
-    # ========================================================
-    # RESULT
-    # ========================================================
+    # -----------------------------------------------------
+    # Display result
+    # -----------------------------------------------------
 
     st.success(
         f"{hdi_level} — Predicted HDI: {prediction}"
     )
 
 
-    # ========================================================
-    # INPUT SUMMARY
-    # ========================================================
+    # -----------------------------------------------------
+    # Display inputs
+    # -----------------------------------------------------
 
     st.subheader("Prediction Inputs")
 
