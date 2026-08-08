@@ -3,93 +3,103 @@ import pandas as pd
 import pickle
 from pathlib import Path
 
-# Page configuration
+
+# ============================================================
+# PAGE CONFIGURATION
+# ============================================================
+
 st.set_page_config(
     page_title="HDI Prediction System",
     page_icon="🌍",
     layout="centered"
 )
 
-# --------------------------------------------------
-# Locate project root
-# --------------------------------------------------
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# ============================================================
+# MODEL
+# ============================================================
 
-# Correct location of HDI.pkl
-MODEL_PATH = (
-    PROJECT_ROOT
-    / "ML-0027-Human-Development-Index"
-    / "Flask"
-    / "HDI.pkl"
-)
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR / "HDI.pkl"
 
-# --------------------------------------------------
-# Load trained model
-# --------------------------------------------------
+
+if not MODEL_PATH.exists():
+    st.error("HDI.pkl not found.")
+    st.write("Expected location:")
+    st.code(str(MODEL_PATH))
+    st.stop()
+
 
 try:
     with open(MODEL_PATH, "rb") as file:
         model = pickle.load(file)
-except Exception as e:
-    st.error("Error loading HDI.pkl")
+
+except ModuleNotFoundError as e:
+    st.error("Required ML dependency is missing.")
     st.code(str(e))
     st.stop()
-except FileNotFoundError:
-    st.error(f"HDI.pkl not found at: {MODEL_PATH}")
+
+except Exception as e:
+    st.error("HDI model could not be loaded.")
+    st.code(str(e))
     st.stop()
 
 
-# --------------------------------------------------
-# Application
-# --------------------------------------------------
+# ============================================================
+# TITLE
+# ============================================================
 
 st.title("🌍 Human Development Index Prediction")
 
 st.write(
-    "Enter the socioeconomic indicators to predict the Human Development Index."
+    "Enter the socioeconomic indicators to predict "
+    "the Human Development Index."
 )
 
-# Input 1
+
+# ============================================================
+# INPUTS
+# ============================================================
+
 life_expectancy = st.number_input(
     "Life Expectancy",
     min_value=0.0,
     max_value=100.0,
-    value=72.5
+    value=72.5,
+    step=0.1
 )
 
-# Input 2
 schooling = st.number_input(
     "Mean Years of Schooling",
     min_value=0.0,
     max_value=30.0,
-    value=10.2
+    value=10.2,
+    step=0.1
 )
 
-# Input 3
 gni = st.number_input(
     "GNI per capita",
     min_value=0.0,
-    value=15000.0
+    value=15000.0,
+    step=100.0
 )
 
-# Input 4
 internet = st.number_input(
     "Internet Users (%)",
     min_value=0.0,
     max_value=100.0,
-    value=65.4
+    value=65.4,
+    step=0.1
 )
 
 
-# --------------------------------------------------
-# Prediction
-# --------------------------------------------------
+# ============================================================
+# PREDICTION
+# ============================================================
 
-if st.button("Predict HDI"):
+if st.button("Predict HDI", type="primary"):
 
-    # Create DataFrame
-    data = pd.DataFrame(
+    input_data = pd.DataFrame(
         [[
             life_expectancy,
             schooling,
@@ -104,33 +114,54 @@ if st.button("Predict HDI"):
         ]
     )
 
-    # Predict
-    prediction = model.predict(data)[0]
-    prediction = round(float(prediction), 2)
+    try:
 
-    # Classify HDI
-    if 0.3 <= prediction < 0.4:
-        level = "Low HDI"
+        prediction = model.predict(input_data)[0]
+        prediction = round(float(prediction), 2)
 
-    elif 0.4 <= prediction < 0.7:
-        level = "Medium HDI"
+    except Exception as e:
 
-    elif 0.7 <= prediction < 0.8:
-        level = "High HDI"
+        st.error("Prediction failed.")
+        st.code(str(e))
+        st.stop()
 
-    elif 0.8 <= prediction <= 0.94:
-        level = "Very High HDI"
+
+    # ========================================================
+    # HDI LEVEL
+    # ========================================================
+
+    if prediction < 0.4:
+        hdi_level = "Low HDI"
+
+    elif prediction < 0.7:
+        hdi_level = "Medium HDI"
+
+    elif prediction < 0.8:
+        hdi_level = "High HDI"
+
+    elif prediction <= 0.94:
+        hdi_level = "Very High HDI"
 
     else:
-        level = "Outside HDI range"
+        hdi_level = "Outside HDI Range"
 
-    # Display result
-    st.success(f"{level}: {prediction}")
 
-    # Display inputs
-    st.subheader("Input Values")
+    # ========================================================
+    # RESULT
+    # ========================================================
 
-    result_df = pd.DataFrame({
+    st.success(
+        f"{hdi_level} — Predicted HDI: {prediction}"
+    )
+
+
+    # ========================================================
+    # INPUT SUMMARY
+    # ========================================================
+
+    st.subheader("Prediction Inputs")
+
+    result = pd.DataFrame({
         "Indicator": [
             "Life Expectancy",
             "Mean Years of Schooling",
@@ -145,4 +176,8 @@ if st.button("Predict HDI"):
         ]
     })
 
-    st.table(result_df)
+    st.dataframe(
+        result,
+        use_container_width=True,
+        hide_index=True
+    )
