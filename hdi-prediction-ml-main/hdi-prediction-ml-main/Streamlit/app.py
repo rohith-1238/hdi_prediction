@@ -1,12 +1,12 @@
+
 import streamlit as st
 import pandas as pd
 import pickle
 from pathlib import Path
 
-
-# ---------------------------------------------------------
-# Page configuration
-# ---------------------------------------------------------
+# =========================================================
+# PAGE CONFIGURATION
+# =========================================================
 
 st.set_page_config(
     page_title="HDI Prediction System",
@@ -14,46 +14,72 @@ st.set_page_config(
     layout="centered"
 )
 
+# =========================================================
+# FIND PROJECT ROOT
+# =========================================================
 
-# ---------------------------------------------------------
-# Model path
-# ---------------------------------------------------------
+# Current file:
+# .../hdi-prediction-ml-main/Streamlit/app.py
 
 BASE_DIR = Path(__file__).resolve().parent
-MODEL_PATH = BASE_DIR / "HDI.pkl"
 
+# Model location:
+# .../hdi-prediction-ml-main/
+#     ML-0027-Human-Development-Index/
+#         Flask/
+#             HDI.pkl
 
-# ---------------------------------------------------------
-# Load model
-# ---------------------------------------------------------
+MODEL_PATH = (
+    BASE_DIR.parent
+    / "ML-0027-Human-Development-Index"
+    / "Flask"
+    / "HDI.pkl"
+)
+
+# =========================================================
+# LOAD MACHINE LEARNING MODEL
+# =========================================================
 
 if not MODEL_PATH.exists():
-    st.error("HDI.pkl was not found.")
+
+    st.error("❌ HDI.pkl was not found.")
 
     st.write("Expected model location:")
     st.code(str(MODEL_PATH))
+
+    st.write("Current Streamlit directory:")
+    st.code(str(BASE_DIR))
 
     st.stop()
 
 
 try:
+
     with open(MODEL_PATH, "rb") as file:
         model = pickle.load(file)
 
 except ModuleNotFoundError as e:
-    st.error("A required Python package is missing.")
+
+    st.error("❌ Required Python package is missing.")
     st.code(str(e))
+
+    st.info(
+        "Make sure scikit-learn is present in requirements.txt."
+    )
+
     st.stop()
 
 except Exception as e:
-    st.error("Error loading HDI.pkl")
+
+    st.error("❌ Error loading HDI.pkl")
     st.code(str(e))
+
     st.stop()
 
 
-# ---------------------------------------------------------
-# Title
-# ---------------------------------------------------------
+# =========================================================
+# TITLE
+# =========================================================
 
 st.title("🌍 Human Development Index Prediction")
 
@@ -62,10 +88,9 @@ st.write(
     "to predict the Human Development Index."
 )
 
-
-# ---------------------------------------------------------
-# Input fields
-# ---------------------------------------------------------
+# =========================================================
+# INPUT FIELDS
+# =========================================================
 
 life_expectancy = st.number_input(
     "Life Expectancy",
@@ -98,12 +123,15 @@ internet = st.number_input(
     step=0.1
 )
 
-
-# ---------------------------------------------------------
-# Prediction
-# ---------------------------------------------------------
+# =========================================================
+# PREDICTION
+# =========================================================
 
 if st.button("Predict HDI", type="primary"):
+
+    # -----------------------------------------------------
+    # Prepare input data
+    # -----------------------------------------------------
 
     input_data = pd.DataFrame(
         [[
@@ -120,6 +148,10 @@ if st.button("Predict HDI", type="primary"):
         ]
     )
 
+    # -----------------------------------------------------
+    # Make prediction
+    # -----------------------------------------------------
+
     try:
 
         prediction = model.predict(input_data)[0]
@@ -128,43 +160,46 @@ if st.button("Predict HDI", type="primary"):
 
     except Exception as e:
 
-        st.error("Prediction failed.")
+        st.error("❌ Prediction failed.")
         st.code(str(e))
+
         st.stop()
 
-
-    # -----------------------------------------------------
-    # HDI classification
-    # -----------------------------------------------------
+    # =====================================================
+    # HDI CLASSIFICATION
+    # =====================================================
 
     if prediction < 0.4:
+
         hdi_level = "Low HDI"
 
     elif prediction < 0.7:
+
         hdi_level = "Medium HDI"
 
     elif prediction < 0.8:
+
         hdi_level = "High HDI"
 
     elif prediction <= 0.94:
+
         hdi_level = "Very High HDI"
 
     else:
+
         hdi_level = "Outside HDI Range"
 
-
-    # -----------------------------------------------------
-    # Display result
-    # -----------------------------------------------------
+    # =====================================================
+    # DISPLAY RESULT
+    # =====================================================
 
     st.success(
-        f"{hdi_level} — Predicted HDI: {prediction}"
+        f"🌍 {hdi_level} — Predicted HDI: {prediction}"
     )
 
-
-    # -----------------------------------------------------
-    # Display inputs
-    # -----------------------------------------------------
+    # =====================================================
+    # DISPLAY INPUTS
+    # =====================================================
 
     st.subheader("Prediction Inputs")
 
@@ -188,3 +223,4 @@ if st.button("Predict HDI", type="primary"):
         use_container_width=True,
         hide_index=True
     )
+
