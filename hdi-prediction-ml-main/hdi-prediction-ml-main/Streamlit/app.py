@@ -3,6 +3,7 @@ import pandas as pd
 import pickle
 from pathlib import Path
 
+# Page configuration
 st.set_page_config(
     page_title="HDI Prediction System",
     page_icon="🌍",
@@ -10,38 +11,30 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
-# Find project root
+# Locate project root
 # --------------------------------------------------
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-# Model location
-MODEL_PATH = PROJECT_ROOT / "Flask" / "HDI.pkl"
+# Correct location of HDI.pkl
+MODEL_PATH = (
+    PROJECT_ROOT
+    / "ML-0027-Human-Development-Index"
+    / "Flask"
+    / "HDI.pkl"
+)
 
 # --------------------------------------------------
-# Check files
+# Load trained model
 # --------------------------------------------------
 
-st.write("Project root:", PROJECT_ROOT)
-st.write("Model path:", MODEL_PATH)
+try:
+    with open(MODEL_PATH, "rb") as file:
+        model = pickle.load(file)
 
-if not MODEL_PATH.exists():
-    st.error("HDI.pkl was not found.")
-
-    st.write("Files available in project:")
-
-    for path in PROJECT_ROOT.rglob("*"):
-        if path.is_file():
-            st.write(str(path))
-
+except FileNotFoundError:
+    st.error(f"HDI.pkl not found at: {MODEL_PATH}")
     st.stop()
-
-# --------------------------------------------------
-# Load model
-# --------------------------------------------------
-
-with open(MODEL_PATH, "rb") as file:
-    model = pickle.load(file)
 
 
 # --------------------------------------------------
@@ -54,6 +47,7 @@ st.write(
     "Enter the socioeconomic indicators to predict the Human Development Index."
 )
 
+# Input 1
 life_expectancy = st.number_input(
     "Life Expectancy",
     min_value=0.0,
@@ -61,6 +55,7 @@ life_expectancy = st.number_input(
     value=72.5
 )
 
+# Input 2
 schooling = st.number_input(
     "Mean Years of Schooling",
     min_value=0.0,
@@ -68,12 +63,14 @@ schooling = st.number_input(
     value=10.2
 )
 
+# Input 3
 gni = st.number_input(
     "GNI per capita",
     min_value=0.0,
     value=15000.0
 )
 
+# Input 4
 internet = st.number_input(
     "Internet Users (%)",
     min_value=0.0,
@@ -82,8 +79,13 @@ internet = st.number_input(
 )
 
 
+# --------------------------------------------------
+# Prediction
+# --------------------------------------------------
+
 if st.button("Predict HDI"):
 
+    # Create DataFrame
     data = pd.DataFrame(
         [[
             life_expectancy,
@@ -99,9 +101,11 @@ if st.button("Predict HDI"):
         ]
     )
 
+    # Predict
     prediction = model.predict(data)[0]
     prediction = round(float(prediction), 2)
 
+    # Classify HDI
     if 0.3 <= prediction < 0.4:
         level = "Low HDI"
 
@@ -117,4 +121,25 @@ if st.button("Predict HDI"):
     else:
         level = "Outside HDI range"
 
+    # Display result
     st.success(f"{level}: {prediction}")
+
+    # Display inputs
+    st.subheader("Input Values")
+
+    result_df = pd.DataFrame({
+        "Indicator": [
+            "Life Expectancy",
+            "Mean Years of Schooling",
+            "GNI per capita",
+            "Internet Users (%)"
+        ],
+        "Value": [
+            life_expectancy,
+            schooling,
+            gni,
+            internet
+        ]
+    })
+
+    st.table(result_df)
