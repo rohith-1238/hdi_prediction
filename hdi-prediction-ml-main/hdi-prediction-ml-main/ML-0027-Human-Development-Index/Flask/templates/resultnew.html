@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HDI Prediction Result</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 400px;
+        }
+        h2 { color: #2C3E50; }
+        .result {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1A5276;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #EBF5FB;
+            border-radius: 8px;
+        }
+        .btn {
+            background-color: #2C3E50;
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 15px;
+            cursor: pointer;
+            text-decoration: none;
+            margin: 5px;
+            display: inline-block;
+        }
+        .btn:hover { background-color: #1A5276; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>HDI Prediction Result</h2>
+        <div class="result">{{ prediction_text }}</div>
+        <a href="/Prediction" class="btn">Predict Again</a>
+        <a href="/Home" class="btn">Home</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HDI Prediction Input</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 400px;
+        }
+        h2 { color: #2C3E50; text-align: center; }
+        label { font-weight: bold; color: #555; }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 16px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            background-color: #2C3E50;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover { background-color: #1A5276; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Enter HDI Indicators</h2>
+        <form action="/predict" method="POST">
+            <label>Life Expectancy</label>
+            <input type="text" name="Life expectancy" placeholder="e.g. 72.5" required/>
+
+            <label>Mean Years of Schooling</label>
+            <input type="text" name="Mean years of schooling" placeholder="e.g. 10.2" required/>
+
+            <label>Gross National Income (GNI) per capita</label>
+            <input type="text" name="Gross national income (GNI) per capita" placeholder="e.g. 15000" required/>
+
+            <label>Internet Users (%)</label>
+            <input type="text" name="Internet users" placeholder="e.g. 65.4" required/>
+
+            <br>
+            <button type="submit">Predict HDI</button>
+        </form>
+        <br>
+        <a href="/Home" style="color:#2C3E50;">← Back to Home</a>
+    </div>
+</body>
+</html>

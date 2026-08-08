@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HDI Analytics Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f2f5;
+      color: #2d3748;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1a202c;
+      padding: 0 32px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    header .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #3182ce, #63b3ed);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    header h1 {
+      font-size: 1.1rem;
+      color: #ffffff;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    header .subtitle {
+      font-size: 0.75rem;
+      color: #718096;
+    }
+
+    header .badge {
+      background: #2d3748;
+      border: 1px solid #4a5568;
+      color: #a0aec0;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+    }
+
+    .nav-bar {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .nav-bar button {
+      padding: 14px 24px;
+      border: none;
+      background: transparent;
+      color: #718096;
+      font-size: 0.87rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .nav-bar button:hover { color: #3182ce; }
+
+    .nav-bar button.active {
+      color: #3182ce;
+      border-bottom-color: #3182ce;
+      background: #ebf8ff;
+    }
+
+    .main { padding: 28px 32px; }
+
+    .dashboard { display: none; }
+    .dashboard.active { display: block; }
+
+    .page-header {
+      margin-bottom: 24px;
+    }
+
+    .page-header h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1a202c;
+    }
+
+    .page-header p {
+      font-size: 0.83rem;
+      color: #718096;
+      margin-top: 4px;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 18px 16px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    .stat-card .stat-val {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: #1a202c;
+    }
+
+    .stat-card .stat-label {
+      font-size: 0.73rem;
+      color: #718096;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-card .stat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .grid-1 { margin-bottom: 20px; }
+
+    .card {
+      background: #ffffff;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid #f0f4f8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-header h3 {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #2d3748;
+    }
+
+    .card-header span {
+      font-size: 0.75rem;
+      color: #a0aec0;
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+
+    .card-body { padding: 20px; }
+
+    .chart-wrap { position: relative; }
+
+    .country-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 2px;
+    }
+
+    .country-grid::-webkit-scrollbar { width: 5px; }
+    .country-grid::-webkit-scrollbar-track { background: #f7fafc; }
+    .country-grid::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
+
+    .c-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      border-left: 4px solid #cbd5e0;
+      background: #fafafa;
+      transition: box-shadow 0.2s;
+    }
+
+    .c-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: #fff; }
+
+    .c-card.very-high { border-left-color: #38a169; }
+    .c-card.high { border-left-color: #3182ce; }
+    .c-card.medium { border-left-color: #d69e2e; }
+    .c-card.low { border-left-color: #e53e3e; }
+
+    .c-name { font-size: 0.82rem; font-weight: 600; color: #2d3748; margin-bottom: 4px; }
+    .c-score { font-size: 1.15rem; font-weight: 700; }
+    .c-cat { font-size: 0.7rem; color: #718096; margin-top: 2px; }
+
+    .legend-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .leg-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.8rem;
+      color: #4a5568;
+    }
+
+    .leg-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .filter-bar select {
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      color: #4a5568;
+      padding: 7px 14px;
+      border-radius: 7px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .filter-bar select:focus { border-color: #3182ce; }
+
+    footer {
+      text-align: center;
+      padding: 18px;
+      color: #a0aec0;
+      font-size: 0.78rem;
+      border-top: 1px solid #e2e8f0;
+      background: #fff;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .stats-row { grid-template-columns: repeat(3,1fr); }
+      .grid-2 { grid-template-columns: 1fr; }
+      .main { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🌐</div>
+    <div>
+      <h1>HDI Analytics Dashboard</h1>
+      <div class="subtitle">A Comprehensive Measure of Well-Being</div>
+    </div>
+  </div>
+  <div class="badge">ML-0027 | Human Development Index</div>
+</header>
+
+<!-- NAV -->
+<div class="nav-bar">
+  <button class="active" onclick="showDash('bar', this)">📊 HDI Score Comparison</button>
+  <button onclick="showDash('map', this)">🌍 World HDI Map</button>
+  <button onclick="showDash('trend', this)">📈 HDI Trend Over Years</button>
+</div>
+
+<div class="main">
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-val">195</div>
+      <div class="stat-label">Total Countries</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">0.727</div>
+      <div class="stat-label">Avg HDI Score</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:#38a169">59</div>
+      <div class="stat-label"><span class="stat-dot" style="background:#38a169"></span>Very High</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:#3182ce">53</div>
+      <div class="stat-label"><span class="stat-dot" style="background:#3182ce"></span>High HDI</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:#d69e2e">39</div>
+      <div class="stat-label"><span class="stat-dot" style="background:#d69e2e"></span>Medium HDI</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:#e53e3e">44</div>
+      <div class="stat-label"><span class="stat-dot" style="background:#e53e3e"></span>Low HDI</div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD 1: BAR -->
+  <div id="dash-bar" class="dashboard active">
+    <div class="page-header">
+      <h2>HDI Score Comparison</h2>
+      <p>Comparing Human Development Index scores across top and bottom performing nations.</p>
+    </div>
+    <div class="grid-1 card">
+      <div class="card-header">
+        <h3>Top 20 Countries by HDI Score</h3>
+        <span>2015 Data</span>
+      </div>
+      <div class="card-body">
+        <div class="chart-wrap" style="height:340px">
+          <canvas id="barChart1"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="grid-1 card">
+      <div class="card-header">
+        <h3>Bottom 10 Countries by HDI Score</h3>
+        <span>Needs Intervention</span>
+      </div>
+      <div class="card-body">
+        <div class="chart-wrap" style="height:280px">
+          <canvas id="barChart2"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD 2: MAP -->
+  <div id="dash-map" class="dashboard">
+    <div class="page-header">
+      <h2>World HDI Map</h2>
+      <p>Visual representation of HDI categories across 195 countries worldwide.</p>
+    </div>
+    <div class="legend-row">
+      <div class="leg-item"><div class="leg-dot" style="background:#38a169"></div>Very High HDI (0.8–1.0)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#3182ce"></div>High HDI (0.7–0.8)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#d69e2e"></div>Medium HDI (0.4–0.7)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#e53e3e"></div>Low HDI (0.0–0.4)</div>
+    </div>
+    <div class="filter-bar">
+      <select onchange="filterMap(this.value)">
+        <option value="all">All Categories</option>
+        <option value="very-high">Very High HDI</option>
+        <option value="high">High HDI</option>
+        <option value="medium">Medium HDI</option>
+        <option value="low">Low HDI</option>
+      </select>
+    </div>
+    <div class="card grid-1" style="margin-bottom:20px">
+      <div class="card-header"><h3>Country HDI Classifications</h3><span id="countLabel">50 Countries Shown</span></div>
+      <div class="card-body">
+        <div class="country-grid" id="mapGrid"></div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><h3>HDI Category Distribution</h3><span>Pie Chart</span></div>
+        <div class="card-body"><div class="chart-wrap" style="height:260px"><canvas id="pieChart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Share of Countries by HDI</h3><span>Doughnut</span></div>
+        <div class="card-body"><div class="chart-wrap" style="height:260px"><canvas id="doughnutChart"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD 3: TREND -->
+  <div id="dash-trend" class="dashboard">
+    <div class="page-header">
+      <h2>HDI Trend Over Years</h2>
+      <p>Tracking Human Development Index growth across major world regions from 1990 to 2015.</p>
+    </div>
+    <div class="card grid-1" style="margin-bottom:20px">
+      <div class="card-header"><h3>Average HDI Score by Region Over Time</h3><span>1990 – 2015</span></div>
+      <div class="card-body"><div class="chart-wrap" style="height:340px"><canvas id="lineChart"></canvas></div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><h3>Regional HDI Comparison</h3><span>Radar Chart</span></div>
+        <div class="card-body"><div class="chart-wrap" style="height:280px"><canvas id="radarChart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>HDI Growth Rate (1990 → 2015)</h3><span>Horizontal Bar</span></div>
+        <div class="card-body"><div class="chart-wrap" style="height:280px"><canvas id="growthChart"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>HDI Prediction System &nbsp;|&nbsp; A Comprehensive Measure of Well-Being &nbsp;|&nbsp; Built with Python, Scikit-learn & Flask</footer>
+
+<script>
+const COLORS = {
+  green: '#38a169', blue: '#3182ce', yellow: '#d69e2e', red: '#e53e3e',
+  greenA: 'rgba(56,161,105,0.8)', blueA: 'rgba(49,130,206,0.8)',
+  yellowA: 'rgba(214,158,46,0.8)', redA: 'rgba(229,62,62,0.8)',
+  grid: 'rgba(0,0,0,0.06)', text: '#718096'
+};
+
+const axisStyle = {
+  scales: {
+    x: { ticks: { color: COLORS.text, font:{size:10} }, grid: { color: COLORS.grid } },
+    y: { ticks: { color: COLORS.text }, grid: { color: COLORS.grid } }
+  },
+  plugins: { legend: { labels: { color: '#4a5568', font:{size:11} } } }
+};
+
+// BAR 1
+new Chart(document.getElementById('barChart1'), {
+  type: 'bar',
+  data: {
+    labels: ['Norway','Australia','Switzerland','Germany','Denmark','Singapore','Netherlands','Ireland','Iceland','Canada','USA','Hong Kong','New Zealand','Sweden','Liechtenstein','UK','Japan','Korea','Israel','Luxembourg'],
+    datasets: [{
+      label: 'HDI Score',
+      data: [0.944,0.935,0.930,0.916,0.923,0.912,0.922,0.923,0.921,0.913,0.915,0.910,0.913,0.907,0.908,0.907,0.891,0.898,0.894,0.892],
+      backgroundColor: 'rgba(49,130,206,0.75)',
+      borderColor: '#3182ce',
+      borderWidth: 1,
+      borderRadius: 5,
+    }]
+  },
+  options: { ...axisStyle, scales: { ...axisStyle.scales, y: { ...axisStyle.scales.y, min: 0.85, max: 0.96 } } }
+});
+
+// BAR 2
+new Chart(document.getElementById('barChart2'), {
+  type: 'bar',
+  data: {
+    labels: ['Niger','CAR','South Sudan','Chad','Burkina Faso','Burundi','Guinea','Mozambique','Sierra Leone','Eritrea'],
+    datasets: [{
+      label: 'HDI Score',
+      data: [0.348,0.352,0.418,0.396,0.402,0.404,0.411,0.416,0.413,0.420],
+      backgroundColor: 'rgba(229,62,62,0.75)',
+      borderColor: '#e53e3e',
+      borderWidth: 1,
+      borderRadius: 5,
+    }]
+  },
+  options: { ...axisStyle, scales: { ...axisStyle.scales, y: { ...axisStyle.scales.y, min: 0.3, max: 0.45 } } }
+});
+
+// COUNTRY DATA
+const countries = [
+  {n:'Norway',s:0.944,c:'very-high'},{n:'Australia',s:0.935,c:'very-high'},{n:'Switzerland',s:0.930,c:'very-high'},
+  {n:'Germany',s:0.916,c:'very-high'},{n:'Denmark',s:0.923,c:'very-high'},{n:'Singapore',s:0.912,c:'very-high'},
+  {n:'Netherlands',s:0.922,c:'very-high'},{n:'Ireland',s:0.923,c:'very-high'},{n:'USA',s:0.915,c:'very-high'},
+  {n:'Canada',s:0.913,c:'very-high'},{n:'Japan',s:0.891,c:'very-high'},{n:'France',s:0.888,c:'very-high'},
+  {n:'UK',s:0.907,c:'very-high'},{n:'South Korea',s:0.898,c:'very-high'},{n:'Spain',s:0.876,c:'very-high'},
+  {n:'Italy',s:0.873,c:'very-high'},{n:'Sweden',s:0.907,c:'very-high'},{n:'Iceland',s:0.921,c:'very-high'},
+  {n:'New Zealand',s:0.913,c:'very-high'},{n:'Argentina',s:0.836,c:'very-high'},
+  {n:'Brazil',s:0.755,c:'high'},{n:'China',s:0.738,c:'high'},{n:'Mexico',s:0.756,c:'high'},
+  {n:'Malaysia',s:0.779,c:'high'},{n:'Russia',s:0.798,c:'high'},{n:'Iran',s:0.766,c:'high'},
+  {n:'Turkey',s:0.761,c:'high'},{n:'Thailand',s:0.726,c:'high'},{n:'Colombia',s:0.720,c:'high'},
+  {n:'Peru',s:0.734,c:'high'},{n:'Ecuador',s:0.732,c:'high'},{n:'Jordan',s:0.748,c:'high'},
+  {n:'India',s:0.609,c:'medium'},{n:'Pakistan',s:0.538,c:'medium'},{n:'Bangladesh',s:0.570,c:'medium'},
+  {n:'Nigeria',s:0.514,c:'medium'},{n:'Ghana',s:0.579,c:'medium'},{n:'Kenya',s:0.548,c:'medium'},
+  {n:'Egypt',s:0.690,c:'medium'},{n:'Indonesia',s:0.684,c:'medium'},{n:'Philippines',s:0.668,c:'medium'},
+  {n:'Vietnam',s:0.666,c:'medium'},{n:'Cambodia',s:0.555,c:'medium'},{n:'Nepal',s:0.558,c:'medium'},
+  {n:'Niger',s:0.348,c:'low'},{n:'CAR',s:0.352,c:'low'},{n:'South Sudan',s:0.418,c:'low'},
+  {n:'Chad',s:0.396,c:'low'},{n:'Mali',s:0.419,c:'low'},{n:'Burkina Faso',s:0.402,c:'low'},
+];
+
+const scoreColors = {'very-high':COLORS.green,'high':COLORS.blue,'medium':COLORS.yellow,'low':COLORS.red};
+const catLabels = {'very-high':'Very High HDI','high':'High HDI','medium':'Medium HDI','low':'Low HDI'};
+
+function renderMap(filter='all') {
+  const grid = document.getElementById('mapGrid');
+  const label = document.getElementById('countLabel');
+  grid.innerHTML = '';
+  const filtered = countries.filter(c => filter==='all' || c.c===filter);
+  label.textContent = filtered.length + ' Countries Shown';
+  filtered.forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'c-card ' + c.c;
+    d.innerHTML = '<div class="c-name">'+c.n+'</div><div class="c-score" style="color:'+scoreColors[c.c]+'">'+c.s.toFixed(3)+'</div><div class="c-cat">'+catLabels[c.c]+'</div>';
+    grid.appendChild(d);
+  });
+}
+renderMap();
+function filterMap(v) { renderMap(v); }
+
+// PIE
+new Chart(document.getElementById('pieChart'), {
+  type: 'pie',
+  data: {
+    labels: ['Very High HDI','High HDI','Medium HDI','Low HDI'],
+    datasets: [{ data:[59,53,39,44], backgroundColor:[COLORS.greenA,COLORS.blueA,COLORS.yellowA,COLORS.redA], borderWidth:2, borderColor:'#fff' }]
+  },
+  options: { plugins: { legend: { labels: { color:'#4a5568', font:{size:11} } } } }
+});
+
+// DOUGHNUT
+new Chart(document.getElementById('doughnutChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Very High (30%)','High (27%)','Medium (20%)','Low (23%)'],
+    datasets: [{ data:[30,27,20,23], backgroundColor:[COLORS.greenA,COLORS.blueA,COLORS.yellowA,COLORS.redA], borderWidth:2, borderColor:'#fff' }]
+  },
+  options: { plugins: { legend: { labels: { color:'#4a5568', font:{size:11} } } }, cutout:'60%' }
+});
+
+// LINE
+new Chart(document.getElementById('lineChart'), {
+  type: 'line',
+  data: {
+    labels: ['1990','1995','2000','2005','2010','2015'],
+    datasets: [
+      {label:'Europe & Central Asia', data:[0.704,0.718,0.729,0.755,0.771,0.791], borderColor:COLORS.blue, backgroundColor:'rgba(49,130,206,0.07)', tension:0.4, fill:true, pointRadius:4},
+      {label:'East Asia & Pacific', data:[0.517,0.561,0.593,0.635,0.682,0.720], borderColor:COLORS.green, backgroundColor:'rgba(56,161,105,0.07)', tension:0.4, fill:true, pointRadius:4},
+      {label:'Latin America', data:[0.625,0.655,0.683,0.706,0.730,0.751], borderColor:'#805ad5', backgroundColor:'rgba(128,90,213,0.07)', tension:0.4, fill:true, pointRadius:4},
+      {label:'South Asia', data:[0.437,0.468,0.501,0.539,0.581,0.621], borderColor:COLORS.yellow, backgroundColor:'rgba(214,158,46,0.07)', tension:0.4, fill:true, pointRadius:4},
+      {label:'Sub-Saharan Africa', data:[0.398,0.396,0.400,0.421,0.466,0.518], borderColor:COLORS.red, backgroundColor:'rgba(229,62,62,0.07)', tension:0.4, fill:true, pointRadius:4},
+    ]
+  },
+  options: axisStyle
+});
+
+// RADAR
+new Chart(document.getElementById('radarChart'), {
+  type: 'radar',
+  data: {
+    labels: ['Europe','East Asia','Latin America','South Asia','Sub-Saharan Africa','North America','Middle East'],
+    datasets: [
+      {label:'1990 HDI', data:[0.704,0.517,0.625,0.437,0.398,0.860,0.590], borderColor:COLORS.blue, backgroundColor:'rgba(49,130,206,0.15)', pointBackgroundColor:COLORS.blue},
+      {label:'2015 HDI', data:[0.791,0.720,0.751,0.621,0.518,0.920,0.700], borderColor:COLORS.green, backgroundColor:'rgba(56,161,105,0.15)', pointBackgroundColor:COLORS.green},
+    ]
+  },
+  options: {
+    scales: { r: { ticks:{color:COLORS.text, backdropColor:'transparent'}, grid:{color:COLORS.grid}, pointLabels:{color:'#4a5568', font:{size:10}} } },
+    plugins: { legend: { labels: { color:'#4a5568', font:{size:11} } } }
+  }
+});
+
+// GROWTH BAR
+new Chart(document.getElementById('growthChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Sub-Saharan Africa','South Asia','East Asia','Latin America','Europe','North America'],
+    datasets: [{
+      label: 'HDI Growth (1990–2015)',
+      data: [0.120, 0.184, 0.203, 0.126, 0.087, 0.060],
+      backgroundColor: ['rgba(229,62,62,0.8)','rgba(214,158,46,0.8)','rgba(56,161,105,0.8)','rgba(128,90,213,0.8)','rgba(49,130,206,0.8)','rgba(49,130,206,0.5)'],
+      borderRadius: 5,
+    }]
+  },
+  options: { indexAxis: 'y', ...axisStyle }
+});
+
+// NAV
+function showDash(id, btn) {
+  document.querySelectorAll('.dashboard').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.nav-bar button').forEach(b => b.classList.remove('active'));
+  document.getElementById('dash-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
